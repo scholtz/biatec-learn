@@ -1,0 +1,164 @@
+{
+  "name": "BiatecLearn",
+  "desc": "",
+  "methods": [
+    {
+      "name": "createApplication",
+      "desc": "Initial setup",
+      "args": [],
+      "returns": {
+        "type": "void"
+      }
+    },
+    {
+      "name": "updateApplication",
+      "desc": "Creator can update application",
+      "args": [
+        {
+          "name": "version",
+          "type": "string"
+        }
+      ],
+      "returns": {
+        "type": "void"
+      }
+    },
+    {
+      "name": "setupQuestion",
+      "desc": "Setup the question",
+      "args": [
+        {
+          "name": "deposit",
+          "type": "txn",
+          "desc": "Deposit txn"
+        },
+        {
+          "name": "id",
+          "type": "byte[32]",
+          "desc": "Hash of the ID"
+        },
+        {
+          "name": "question",
+          "type": "(uint64,uint64,uint64,uint64,string,string,string,string,string,string,string)",
+          "desc": "Question to answer"
+        }
+      ],
+      "returns": {
+        "type": "void"
+      }
+    },
+    {
+      "name": "answerQuestion",
+      "desc": "Setup the question",
+      "args": [
+        {
+          "name": "id",
+          "type": "string",
+          "desc": "ID of the question. The hash (sha512_256) of the ID is the key in the box."
+        },
+        {
+          "name": "answer",
+          "type": "uint64",
+          "desc": "Answer to the question"
+        }
+      ],
+      "returns": {
+        "type": "void"
+      }
+    },
+    {
+      "name": "payment",
+      "desc": "Creator can send pay/axfer transaction out of the smart contract",
+      "args": [
+        {
+          "name": "amount",
+          "type": "uint64",
+          "desc": "Amount"
+        },
+        {
+          "name": "receiver",
+          "type": "address",
+          "desc": "Receiver"
+        },
+        {
+          "name": "note",
+          "type": "string",
+          "desc": "Note"
+        }
+      ],
+      "returns": {
+        "type": "void"
+      }
+    },
+    {
+      "name": "assetTransfer",
+      "desc": "Creator can send pay/axfer transaction out of the smart contract",
+      "args": [
+        {
+          "name": "xferAsset",
+          "type": "uint64",
+          "desc": "Asset id"
+        },
+        {
+          "name": "assetAmount",
+          "type": "uint64",
+          "desc": "Amount"
+        },
+        {
+          "name": "assetReceiver",
+          "type": "address",
+          "desc": "Receiver"
+        },
+        {
+          "name": "note",
+          "type": "string",
+          "desc": "Note"
+        }
+      ],
+      "returns": {
+        "type": "void"
+      }
+    },
+    {
+      "name": "sendOnlineKeyRegistration",
+      "desc": "Creator can perfom key registration for this LP pool",
+      "args": [
+        {
+          "name": "votePk",
+          "type": "byte[]"
+        },
+        {
+          "name": "selectionPk",
+          "type": "byte[]"
+        },
+        {
+          "name": "stateProofPk",
+          "type": "byte[]"
+        },
+        {
+          "name": "voteFirst",
+          "type": "uint64"
+        },
+        {
+          "name": "voteLast",
+          "type": "uint64"
+        },
+        {
+          "name": "voteKeyDilution",
+          "type": "uint64"
+        }
+      ],
+      "returns": {
+        "type": "void"
+      }
+    },
+    {
+      "name": "sendOfflineKeyRegistration",
+      "desc": "Creator can perfom key unregistration for this LP pool",
+      "args": [],
+      "returns": {
+        "type": "void"
+      }
+    }
+  ]
+}
