@@ -164,7 +164,7 @@ describe('BiatecLearn', () => {
     await appClientAnswer2.answerQuestion(
       {
         id: questionId,
-        answer: 1n,
+        answer: 2n, // wrong answer, but it changes the state of the contract (if user fails to answer he looses ability to airdrop)
       },
       {
         sendParams: { ...params, fee: algokit.microAlgos(1000) },

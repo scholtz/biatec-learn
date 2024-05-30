@@ -46,6 +46,17 @@ export class BiatecLearn extends Contract {
   }
 
   /**
+   * Returns object
+   *
+   * @param hash Question hash
+   * @returns The object of the question
+   */
+  @abi.readonly
+  getBox(hash: bytes32): Question {
+    return this.questions(hash).value;
+  }
+
+  /**
    * Setup the question
    *
    * @param deposit Deposit txn
@@ -76,35 +87,39 @@ export class BiatecLearn extends Contract {
    * @param id ID of the question. The hash (sha512_256) of the ID is the key in the box.
    * @param answer Answer to the question
    */
-  public answerQuestion(id: string, answer: uint64): void {
+  public answerQuestion(id: string, answer: uint64): uint64 {
     const hash = sha512_256(id);
     assert(this.questions(hash).exists, 'Question was not found');
     const qBox = this.questions(hash).value;
     const assetId = qBox.assetId;
     const reward = qBox.reward;
     const count = qBox.count;
-    assert(qBox.index === answer);
     assert(qBox.count > 0, 'This question has been already claimed maximum times');
     qBox.count = count - 1;
-
     assert(!this.answers(this.txn.sender).exists, 'You have already answered this question');
     this.answers(this.txn.sender).value = 1;
-    if (assetId === 0) {
-      sendPayment({
-        amount: reward,
-        receiver: this.txn.sender,
-        note: id,
-        fee: 2000, // we pay fee for user as well so that he can receive initial algo deposit
-      });
-    } else {
-      sendAssetTransfer({
-        assetAmount: reward,
-        assetReceiver: this.txn.sender,
-        xferAsset: AssetID.fromUint64(assetId),
-        note: id,
-        fee: 2000, // we pay fee for user as well so that he can receive initial algo deposit
-      });
+
+    if (qBox.index === answer) {
+      // if user answered correctly execute transfer
+      if (assetId === 0) {
+        sendPayment({
+          amount: reward,
+          receiver: this.txn.sender,
+          note: id,
+          fee: 2000, // we pay fee for user as well so that he can receive initial algo deposit
+        });
+      } else {
+        sendAssetTransfer({
+          assetAmount: reward,
+          assetReceiver: this.txn.sender,
+          xferAsset: AssetID.fromUint64(assetId),
+          note: id,
+          fee: 2000, // we pay fee for user as well so that he can receive initial algo deposit
+        });
+      }
+      return 1;
     }
+    return 0;
   }
 
   /**

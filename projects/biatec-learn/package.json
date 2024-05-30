@@ -1,6 +1,6 @@
 {
   "name": "biatec-learn",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "license": "MIT",
   "categories": [
     "Algorand",
@@ -37,7 +37,7 @@
     "js-sha512": "^0.9.0"
   },
   "devDependencies": {
-    "@algorandfoundation/algokit-client-generator": "^2.6.0",
+    "@algorandfoundation/algokit-client-generator": "^3.0.3",
     "@algorandfoundation/tealscript": "^0.93.0",
     "@jest/globals": "^29.7.0",
     "@joe-p/algokit-generate-component": "^0.2.1",

@@ -24,6 +24,22 @@
       }
     },
     {
+      "name": "getBox",
+      "desc": "Returns object",
+      "readonly": true,
+      "args": [
+        {
+          "name": "hash",
+          "type": "byte[32]",
+          "desc": "Question hash"
+        }
+      ],
+      "returns": {
+        "type": "(uint64,uint64,uint64,uint64,string,string,string,string,string,string,string)",
+        "desc": "The object of the question"
+      }
+    },
+    {
       "name": "setupQuestion",
       "desc": "Setup the question",
       "args": [
@@ -63,7 +79,7 @@
         }
       ],
       "returns": {
-        "type": "void"
+        "type": "uint64"
       }
     },
     {

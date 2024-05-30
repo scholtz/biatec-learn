@@ -79,6 +79,48 @@ updateApplication:
 	app_global_put
 	retsub
 
+// getBox(byte[32])(uint64,uint64,uint64,uint64,string,string,string,string,string,string,string)
+*abi_route_getBox:
+	// The ABI return prefix
+	byte 0x151f7c75
+
+	// hash: byte[32]
+	txna ApplicationArgs 1
+	dup
+	len
+	int 32
+	==
+
+	// argument 0 (hash) for getBox must be a byte[32]
+	assert
+
+	// execute getBox(byte[32])(uint64,uint64,uint64,uint64,string,string,string,string,string,string,string)
+	callsub getBox
+	concat
+	log
+	int 1
+	return
+
+// getBox(hash: bytes32): Question
+//
+// Returns object
+//
+// @param hash Question hash
+// @returns The object of the question
+getBox:
+	proto 1 1
+
+	// contracts\BiatecLearn.algo.ts:56
+	// return this.questions(hash).value;
+	byte 0x71 // "q"
+	frame_dig -1 // hash: bytes32
+	concat
+	box_get
+
+	// box value does not exist: this.questions(hash).value
+	assert
+	retsub
+
 // setupQuestion(txn,byte[32],(uint64,uint64,uint64,uint64,string,string,string,string,string,string,string))void
 *abi_route_setupQuestion:
 	// question: (uint64,uint64,uint64,uint64,string,string,string,string,string,string,string)
@@ -115,7 +157,7 @@ setupQuestion:
 	proto 3 0
 
 	// *if0_condition
-	// contracts\BiatecLearn.algo.ts:56
+	// contracts\BiatecLearn.algo.ts:67
 	// question.assetId === 0
 	frame_dig -3 // question: Question
 	store 255 // full array
@@ -127,7 +169,7 @@ setupQuestion:
 	bz *if0_else
 
 	// *if0_consequent
-	// contracts\BiatecLearn.algo.ts:57
+	// contracts\BiatecLearn.algo.ts:68
 	// assert(deposit.receiver === globals.currentApplicationAddress, 'Receiver must be the smart contract address')
 	frame_dig -1 // deposit: Txn
 	gtxns Receiver
@@ -137,7 +179,7 @@ setupQuestion:
 	// Receiver must be the smart contract address
 	assert
 
-	// contracts\BiatecLearn.algo.ts:58
+	// contracts\BiatecLearn.algo.ts:69
 	// assert(question.count * question.reward === deposit.amount, 'Amount does not match question')
 	frame_dig -3 // question: Question
 	store 255 // full array
@@ -159,7 +201,7 @@ setupQuestion:
 	b *if0_end
 
 *if0_else:
-	// contracts\BiatecLearn.algo.ts:60
+	// contracts\BiatecLearn.algo.ts:71
 	// assert(
 	//         deposit.assetReceiver === globals.currentApplicationAddress,
 	//         'Receiver must be the smart contract address'
@@ -172,7 +214,7 @@ setupQuestion:
 	// Receiver must be the smart contract address
 	assert
 
-	// contracts\BiatecLearn.algo.ts:64
+	// contracts\BiatecLearn.algo.ts:75
 	// assert(question.assetId === deposit.xferAsset.id, 'assetId does not match question setup')
 	frame_dig -3 // question: Question
 	store 255 // full array
@@ -186,7 +228,7 @@ setupQuestion:
 	// assetId does not match question setup
 	assert
 
-	// contracts\BiatecLearn.algo.ts:65
+	// contracts\BiatecLearn.algo.ts:76
 	// assert(question.count * question.reward === deposit.amount, 'Asset amount does not match question')
 	frame_dig -3 // question: Question
 	store 255 // full array
@@ -207,7 +249,7 @@ setupQuestion:
 	assert
 
 *if0_end:
-	// contracts\BiatecLearn.algo.ts:68
+	// contracts\BiatecLearn.algo.ts:79
 	// assert(!this.questions(id).exists, 'Question already exists')
 	byte 0x71 // "q"
 	frame_dig -2 // id: bytes32
@@ -220,7 +262,7 @@ setupQuestion:
 	// Question already exists
 	assert
 
-	// contracts\BiatecLearn.algo.ts:70
+	// contracts\BiatecLearn.algo.ts:81
 	// this.questions(id).value = question
 	byte 0x71 // "q"
 	frame_dig -2 // id: bytes32
@@ -232,8 +274,11 @@ setupQuestion:
 	box_put
 	retsub
 
-// answerQuestion(string,uint64)void
+// answerQuestion(string,uint64)uint64
 *abi_route_answerQuestion:
+	// The ABI return prefix
+	byte 0x151f7c75
+
 	// answer: uint64
 	txna ApplicationArgs 2
 	btoi
@@ -242,31 +287,34 @@ setupQuestion:
 	txna ApplicationArgs 1
 	extract 2 0
 
-	// execute answerQuestion(string,uint64)void
+	// execute answerQuestion(string,uint64)uint64
 	callsub answerQuestion
+	itob
+	concat
+	log
 	int 1
 	return
 
-// answerQuestion(id: string, answer: uint64): void
+// answerQuestion(id: string, answer: uint64): uint64
 //
 // Setup the question
 //
 // @param id ID of the question. The hash (sha512_256) of the ID is the key in the box.
 // @param answer Answer to the question
 answerQuestion:
-	proto 2 0
+	proto 2 1
 
 	// Push empty bytes after the frame pointer to reserve space for local variables
 	byte 0x
 	dupn 4
 
-	// contracts\BiatecLearn.algo.ts:80
+	// contracts\BiatecLearn.algo.ts:91
 	// hash = sha512_256(id)
 	frame_dig -1 // id: string
 	sha512_256
 	frame_bury 0 // hash: byte[32]
 
-	// contracts\BiatecLearn.algo.ts:81
+	// contracts\BiatecLearn.algo.ts:92
 	// assert(this.questions(hash).exists, 'Question was not found')
 	byte 0x71 // "q"
 	frame_dig 0 // hash: byte[32]
@@ -278,14 +326,14 @@ answerQuestion:
 	// Question was not found
 	assert
 
-	// contracts\BiatecLearn.algo.ts:82
+	// contracts\BiatecLearn.algo.ts:93
 	// qBox = this.questions(hash).value
 	byte 0x71 // "q"
 	frame_dig 0 // hash: byte[32]
 	concat
 	frame_bury 1 // storage key//qBox
 
-	// contracts\BiatecLearn.algo.ts:83
+	// contracts\BiatecLearn.algo.ts:94
 	// assetId = qBox.assetId
 	frame_dig 1 // storage key//qBox
 	box_get
@@ -298,7 +346,7 @@ answerQuestion:
 	btoi
 	frame_bury 2 // assetId: uint64
 
-	// contracts\BiatecLearn.algo.ts:84
+	// contracts\BiatecLearn.algo.ts:95
 	// reward = qBox.reward
 	frame_dig 1 // storage key//qBox
 	box_get
@@ -311,7 +359,7 @@ answerQuestion:
 	btoi
 	frame_bury 3 // reward: uint64
 
-	// contracts\BiatecLearn.algo.ts:85
+	// contracts\BiatecLearn.algo.ts:96
 	// count = qBox.count
 	frame_dig 1 // storage key//qBox
 	box_get
@@ -324,22 +372,7 @@ answerQuestion:
 	btoi
 	frame_bury 4 // count: uint64
 
-	// contracts\BiatecLearn.algo.ts:86
-	// assert(qBox.index === answer)
-	frame_dig 1 // storage key//qBox
-	box_get
-
-	// box value does not exist: this.questions(hash).value
-	assert
-	store 255 // full array
-	load 255 // full array
-	extract 24 8
-	btoi
-	frame_dig -2 // answer: uint64
-	==
-	assert
-
-	// contracts\BiatecLearn.algo.ts:87
+	// contracts\BiatecLearn.algo.ts:97
 	// assert(qBox.count > 0, 'This question has been already claimed maximum times')
 	frame_dig 1 // storage key//qBox
 	box_get
@@ -356,7 +389,7 @@ answerQuestion:
 	// This question has been already claimed maximum times
 	assert
 
-	// contracts\BiatecLearn.algo.ts:88
+	// contracts\BiatecLearn.algo.ts:98
 	// qBox.count = count - 1
 	frame_dig 1 // storage key//qBox
 	box_get
@@ -378,7 +411,7 @@ answerQuestion:
 	swap
 	box_put
 
-	// contracts\BiatecLearn.algo.ts:90
+	// contracts\BiatecLearn.algo.ts:99
 	// assert(!this.answers(this.txn.sender).exists, 'You have already answered this question')
 	byte 0x61 // "a"
 	txn Sender
@@ -391,7 +424,7 @@ answerQuestion:
 	// You have already answered this question
 	assert
 
-	// contracts\BiatecLearn.algo.ts:91
+	// contracts\BiatecLearn.algo.ts:100
 	// this.answers(this.txn.sender).value = 1
 	byte 0x61 // "a"
 	txn Sender
@@ -400,83 +433,100 @@ answerQuestion:
 	box_put
 
 	// *if1_condition
-	// contracts\BiatecLearn.algo.ts:92
+	// contracts\BiatecLearn.algo.ts:102
+	// qBox.index === answer
+	frame_dig 1 // storage key//qBox
+	box_get
+
+	// box value does not exist: this.questions(hash).value
+	assert
+	store 255 // full array
+	load 255 // full array
+	extract 24 8
+	btoi
+	frame_dig -2 // answer: uint64
+	==
+	bz *if1_end
+
+	// *if1_consequent
+	// *if2_condition
+	// contracts\BiatecLearn.algo.ts:104
 	// assetId === 0
 	frame_dig 2 // assetId: uint64
 	int 0
 	==
-	bz *if1_else
+	bz *if2_else
 
-	// *if1_consequent
-	// contracts\BiatecLearn.algo.ts:93
+	// *if2_consequent
+	// contracts\BiatecLearn.algo.ts:105
 	// sendPayment({
-	//         amount: reward,
-	//         receiver: this.txn.sender,
-	//         note: id,
-	//         fee: 2000, // we pay fee for user as well so that he can receive initial algo deposit
-	//       })
+	//           amount: reward,
+	//           receiver: this.txn.sender,
+	//           note: id,
+	//           fee: 2000, // we pay fee for user as well so that he can receive initial algo deposit
+	//         })
 	itxn_begin
 	int pay
 	itxn_field TypeEnum
 
-	// contracts\BiatecLearn.algo.ts:94
+	// contracts\BiatecLearn.algo.ts:106
 	// amount: reward
 	frame_dig 3 // reward: uint64
 	itxn_field Amount
 
-	// contracts\BiatecLearn.algo.ts:95
+	// contracts\BiatecLearn.algo.ts:107
 	// receiver: this.txn.sender
 	txn Sender
 	itxn_field Receiver
 
-	// contracts\BiatecLearn.algo.ts:96
+	// contracts\BiatecLearn.algo.ts:108
 	// note: id
 	frame_dig -1 // id: string
 	itxn_field Note
 
-	// contracts\BiatecLearn.algo.ts:97
+	// contracts\BiatecLearn.algo.ts:109
 	// fee: 2000
 	int 2000
 	itxn_field Fee
 
 	// Submit inner transaction
 	itxn_submit
-	b *if1_end
+	b *if2_end
 
-*if1_else:
-	// contracts\BiatecLearn.algo.ts:100
+*if2_else:
+	// contracts\BiatecLearn.algo.ts:112
 	// sendAssetTransfer({
-	//         assetAmount: reward,
-	//         assetReceiver: this.txn.sender,
-	//         xferAsset: AssetID.fromUint64(assetId),
-	//         note: id,
-	//         fee: 2000, // we pay fee for user as well so that he can receive initial algo deposit
-	//       })
+	//           assetAmount: reward,
+	//           assetReceiver: this.txn.sender,
+	//           xferAsset: AssetID.fromUint64(assetId),
+	//           note: id,
+	//           fee: 2000, // we pay fee for user as well so that he can receive initial algo deposit
+	//         })
 	itxn_begin
 	int axfer
 	itxn_field TypeEnum
 
-	// contracts\BiatecLearn.algo.ts:101
+	// contracts\BiatecLearn.algo.ts:113
 	// assetAmount: reward
 	frame_dig 3 // reward: uint64
 	itxn_field AssetAmount
 
-	// contracts\BiatecLearn.algo.ts:102
+	// contracts\BiatecLearn.algo.ts:114
 	// assetReceiver: this.txn.sender
 	txn Sender
 	itxn_field AssetReceiver
 
-	// contracts\BiatecLearn.algo.ts:103
+	// contracts\BiatecLearn.algo.ts:115
 	// xferAsset: AssetID.fromUint64(assetId)
 	frame_dig 2 // assetId: uint64
 	itxn_field XferAsset
 
-	// contracts\BiatecLearn.algo.ts:104
+	// contracts\BiatecLearn.algo.ts:116
 	// note: id
 	frame_dig -1 // id: string
 	itxn_field Note
 
-	// contracts\BiatecLearn.algo.ts:105
+	// contracts\BiatecLearn.algo.ts:117
 	// fee: 2000
 	int 2000
 	itxn_field Fee
@@ -484,7 +534,23 @@ answerQuestion:
 	// Submit inner transaction
 	itxn_submit
 
+*if2_end:
+	// contracts\BiatecLearn.algo.ts:120
+	// return 1;
+	int 1
+	b *answerQuestion*return
+
 *if1_end:
+	// contracts\BiatecLearn.algo.ts:122
+	// return 0;
+	int 0
+
+*answerQuestion*return:
+	// set the subroutine return value
+	frame_bury 0
+
+	// pop all local variables from the stack
+	popn 4
 	retsub
 
 // payment(uint64,address,string)void
@@ -522,14 +588,14 @@ answerQuestion:
 payment:
 	proto 3 0
 
-	// contracts\BiatecLearn.algo.ts:118
+	// contracts\BiatecLearn.algo.ts:133
 	// assert(this.txn.sender === globals.creatorAddress)
 	txn Sender
 	global CreatorAddress
 	==
 	assert
 
-	// contracts\BiatecLearn.algo.ts:119
+	// contracts\BiatecLearn.algo.ts:134
 	// sendPayment({
 	//       amount: amount,
 	//       receiver: receiver,
@@ -539,17 +605,17 @@ payment:
 	int pay
 	itxn_field TypeEnum
 
-	// contracts\BiatecLearn.algo.ts:120
+	// contracts\BiatecLearn.algo.ts:135
 	// amount: amount
 	frame_dig -1 // amount: uint64
 	itxn_field Amount
 
-	// contracts\BiatecLearn.algo.ts:121
+	// contracts\BiatecLearn.algo.ts:136
 	// receiver: receiver
 	frame_dig -2 // receiver: Address
 	itxn_field Receiver
 
-	// contracts\BiatecLearn.algo.ts:122
+	// contracts\BiatecLearn.algo.ts:137
 	// note: note
 	frame_dig -3 // note: string
 	itxn_field Note
@@ -561,7 +627,7 @@ payment:
 	// Submit inner transaction
 	itxn_submit
 
-	// contracts\BiatecLearn.algo.ts:124
+	// contracts\BiatecLearn.algo.ts:139
 	// assert(this.txn.sender === globals.creatorAddress)
 	txn Sender
 	global CreatorAddress
@@ -608,14 +674,14 @@ payment:
 assetTransfer:
 	proto 4 0
 
-	// contracts\BiatecLearn.algo.ts:135
+	// contracts\BiatecLearn.algo.ts:150
 	// assert(this.txn.sender === globals.creatorAddress)
 	txn Sender
 	global CreatorAddress
 	==
 	assert
 
-	// contracts\BiatecLearn.algo.ts:136
+	// contracts\BiatecLearn.algo.ts:151
 	// sendAssetTransfer({
 	//       assetAmount: assetAmount,
 	//       assetReceiver: assetReceiver,
@@ -626,22 +692,22 @@ assetTransfer:
 	int axfer
 	itxn_field TypeEnum
 
-	// contracts\BiatecLearn.algo.ts:137
+	// contracts\BiatecLearn.algo.ts:152
 	// assetAmount: assetAmount
 	frame_dig -2 // assetAmount: uint64
 	itxn_field AssetAmount
 
-	// contracts\BiatecLearn.algo.ts:138
+	// contracts\BiatecLearn.algo.ts:153
 	// assetReceiver: assetReceiver
 	frame_dig -3 // assetReceiver: Address
 	itxn_field AssetReceiver
 
-	// contracts\BiatecLearn.algo.ts:139
+	// contracts\BiatecLearn.algo.ts:154
 	// xferAsset: xferAsset
 	frame_dig -1 // xferAsset: AssetID
 	itxn_field XferAsset
 
-	// contracts\BiatecLearn.algo.ts:140
+	// contracts\BiatecLearn.algo.ts:155
 	// note: note
 	frame_dig -4 // note: string
 	itxn_field Note
@@ -691,14 +757,14 @@ assetTransfer:
 sendOnlineKeyRegistration:
 	proto 6 0
 
-	// contracts\BiatecLearn.algo.ts:155
+	// contracts\BiatecLearn.algo.ts:170
 	// assert(this.txn.sender === globals.creatorAddress)
 	txn Sender
 	global CreatorAddress
 	==
 	assert
 
-	// contracts\BiatecLearn.algo.ts:156
+	// contracts\BiatecLearn.algo.ts:171
 	// sendOnlineKeyRegistration({
 	//       selectionPK: selectionPk,
 	//       stateProofPK: stateProofPk,
@@ -712,37 +778,37 @@ sendOnlineKeyRegistration:
 	int keyreg
 	itxn_field TypeEnum
 
-	// contracts\BiatecLearn.algo.ts:157
+	// contracts\BiatecLearn.algo.ts:172
 	// selectionPK: selectionPk
 	frame_dig -2 // selectionPk: bytes
 	itxn_field SelectionPK
 
-	// contracts\BiatecLearn.algo.ts:158
+	// contracts\BiatecLearn.algo.ts:173
 	// stateProofPK: stateProofPk
 	frame_dig -3 // stateProofPk: bytes
 	itxn_field StateProofPK
 
-	// contracts\BiatecLearn.algo.ts:159
+	// contracts\BiatecLearn.algo.ts:174
 	// voteFirst: voteFirst
 	frame_dig -4 // voteFirst: uint64
 	itxn_field VoteFirst
 
-	// contracts\BiatecLearn.algo.ts:160
+	// contracts\BiatecLearn.algo.ts:175
 	// voteKeyDilution: voteKeyDilution
 	frame_dig -6 // voteKeyDilution: uint64
 	itxn_field VoteKeyDilution
 
-	// contracts\BiatecLearn.algo.ts:161
+	// contracts\BiatecLearn.algo.ts:176
 	// voteLast: voteLast
 	frame_dig -5 // voteLast: uint64
 	itxn_field VoteLast
 
-	// contracts\BiatecLearn.algo.ts:162
+	// contracts\BiatecLearn.algo.ts:177
 	// votePK: votePk
 	frame_dig -1 // votePk: bytes
 	itxn_field VotePK
 
-	// contracts\BiatecLearn.algo.ts:163
+	// contracts\BiatecLearn.algo.ts:178
 	// fee: 0
 	int 0
 	itxn_field Fee
@@ -764,20 +830,20 @@ sendOnlineKeyRegistration:
 sendOfflineKeyRegistration:
 	proto 0 0
 
-	// contracts\BiatecLearn.algo.ts:171
+	// contracts\BiatecLearn.algo.ts:186
 	// assert(this.txn.sender === globals.creatorAddress)
 	txn Sender
 	global CreatorAddress
 	==
 	assert
 
-	// contracts\BiatecLearn.algo.ts:172
+	// contracts\BiatecLearn.algo.ts:187
 	// sendOfflineKeyRegistration({ fee: 0 })
 	itxn_begin
 	int keyreg
 	itxn_field TypeEnum
 
-	// contracts\BiatecLearn.algo.ts:172
+	// contracts\BiatecLearn.algo.ts:187
 	// fee: 0
 	int 0
 	itxn_field Fee
@@ -795,14 +861,15 @@ sendOfflineKeyRegistration:
 	err
 
 *call_NoOp:
+	method "getBox(byte[32])(uint64,uint64,uint64,uint64,string,string,string,string,string,string,string)"
 	method "setupQuestion(txn,byte[32],(uint64,uint64,uint64,uint64,string,string,string,string,string,string,string))void"
-	method "answerQuestion(string,uint64)void"
+	method "answerQuestion(string,uint64)uint64"
 	method "payment(uint64,address,string)void"
 	method "assetTransfer(uint64,uint64,address,string)void"
 	method "sendOnlineKeyRegistration(byte[],byte[],byte[],uint64,uint64,uint64)void"
 	method "sendOfflineKeyRegistration()void"
 	txna ApplicationArgs 0
-	match *abi_route_setupQuestion *abi_route_answerQuestion *abi_route_payment *abi_route_assetTransfer *abi_route_sendOnlineKeyRegistration *abi_route_sendOfflineKeyRegistration
+	match *abi_route_getBox *abi_route_setupQuestion *abi_route_answerQuestion *abi_route_payment *abi_route_assetTransfer *abi_route_sendOnlineKeyRegistration *abi_route_sendOfflineKeyRegistration
 
 	// this contract does not implement the given ABI method for call NoOp
 	err
